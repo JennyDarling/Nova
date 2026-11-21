@@ -3,31 +3,100 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nova — Ana Karakter, 7 Konsey Üyesi & İki Renkli Küre 3D Atölyesi</title>
-  <meta name="description" content="Nova açık dünya oyunu için Kadın & Erkek genç ana karakter 3D modeli, yarı yarıya küre füzyonu, evrimleşen kanatlar, 7 konsey üyesi ve 21 iki renkli 3D küre." />
+  <title>Nova — Açık Dünya Nektar Füzyonu, 8. Üye & 7 Karanlık Konsey Boss'u</title>
+  <meta name="description" content="Nova açık dünya büyü füzyon oyunu: İhanete uğrayan 8. Üye, 21 ikili nektar kombinasyonu, 7 Konsey Boss'u ve oynanabilir 3D açık dünya prototipi." />
   <link rel="stylesheet" href="./src/styles/index.css" />
 </head>
 <body>
   <main class="app-shell">
     <header class="app-header">
       <div>
-        <h1>Nova — 3D Karakter & Küre Füzyon Atölyesi</h1>
-        <p class="app-subtitle">Genç Ana Karakter (Kadın & Erkek • İki Yarım Küre Dönüşümü & Kanat Evrimi), 7 Konsey Üyesi ve 21 Küre</p>
+        <h1>NOVA — İhanete Uğrayan 8. Üye & Nektar Evreni</h1>
+        <p class="app-subtitle">Parçalanan Nova • 7 Karanlık Konsey Boss'u • 21 İkili Nektar Kombinasyonu • 3D Açık Dünya</p>
       </div>
-      <nav class="studio-tabs" aria-label="Atölye Görünümleri">
-        <button id="tab-protagonist" type="button" class="tab-btn active">Ana Karakter 3D (Kadın & Erkek)</button>
-        <button id="tab-characters" type="button" class="tab-btn">7 Konsey Üyesi 3D</button>
-        <button id="tab-spheres" type="button" class="tab-btn">21 İki Renkli 3D Küre</button>
+      <nav class="studio-tabs" aria-label="Oyun ve 3D Atölye Sekmeleri">
+        <button id="tab-world" type="button" class="tab-btn active">3D Açık Dünya (Oynanış)</button>
+        <button id="tab-protagonist" type="button" class="tab-btn">8. Üye: Ana Karakter 3D</button>
+        <button id="tab-characters" type="button" class="tab-btn">7 Konsey Boss'u 3D</button>
+        <button id="tab-spheres" type="button" class="tab-btn">21 Nektar Küresi 3D</button>
       </nav>
     </header>
 
-    <!-- VIEW 0: 3D PROTAGONIST CUSTOMIZER & SPHERE FUSION / WING EVOLUTION STUDIO -->
-    <section id="view-protagonist" class="studio-view" aria-label="3D Ana Karakter ve Evrim Sahnesi">
+    <!-- VIEW 0: PLAYABLE 3D OPEN WORLD (PROLOG SEA -> SHORE -> 7 BOSS REGIONS -> 2 ENDINGS) -->
+    <section id="view-world" class="studio-view" aria-label="3D Açık Dünya Oynanış Sahnesi">
+      <div class="controls-panel">
+        <div class="sliders-row">
+          <div class="btn-group">
+            <span>Hızlı Bölge Geçişi:</span>
+            <select id="world-region-select" class="select-box"></select>
+            <button id="btn-world-prolog" type="button" class="swatch-btn">Prolog: Deniz Dibine Dön</button>
+            <button id="btn-world-endings" type="button" class="swatch-btn">Final Seçimi (2 Son)</button>
+          </div>
+          <div class="status-line">
+            <strong>Kontroller:</strong> <code>WASD</code> Hareket • <code>Space</code> Zıpla/Yüz • <code>F</code> Birleşik Yetenek • <code>1–7</code> Nektar İç • <code>X</code> Nötr Hal • Fare Sürükle: Kamera
+          </div>
+        </div>
+      </div>
+
+      <div class="viewport-stage world-stage">
+        <canvas id="world-canvas"></canvas>
+
+        <!-- Live Open-World Gameplay HUD -->
+        <div class="char-hud">
+          <div class="char-hud-card">
+            <div id="world-hud-region" class="char-hud-title">Prolog: Deniz Dibi</div>
+            <div id="world-hud-skill" class="world-skill-title">Nötr Hal (Kanatsız)</div>
+            <div id="world-hud-desc" class="char-hud-summary">Deniz dibindeki kürelere dokunarak veya alttan nektar içerek yüzeye çık!</div>
+            <div class="nectar-bar-track">
+              <div id="world-nectar-bar" class="nectar-bar-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="world-stats-col">
+            <div id="world-hp-badge" class="poly-badge">Can: 100%</div>
+            <div id="world-boss-badge" class="poly-badge">Anı & Ana Küre: 0 / 7</div>
+          </div>
+        </div>
+
+        <!-- Memory Fragment & Ending Story Modal -->
+        <div id="world-story-modal" class="story-modal" hidden>
+          <div class="story-modal-box">
+            <div id="story-modal-kicker" class="story-kicker">İhanet Gecesi Anısı</div>
+            <h3 id="story-modal-title"></h3>
+            <p id="story-modal-body"></p>
+            <div id="story-ending-actions" class="btn-group" hidden>
+              <button id="btn-choose-freedom" type="button" class="swatch-btn active">1. Özgürlük Sonu (Sözü Tut & Nova'yı Halka Ver)</button>
+              <button id="btn-choose-sovereign" type="button" class="swatch-btn">2. Hükümdar Sonu (7 Rengi Tek Başına İç!)</button>
+            </div>
+            <div class="story-modal-footer">
+              <button id="btn-close-story" type="button" class="swatch-btn">Devam Et</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-panel">
+        <div class="sliders-row">
+          <div class="btn-group">
+            <span>Nektar İç (1–7):</span>
+            <div id="world-nectar-btns" class="btn-group"></div>
+          </div>
+          <div class="btn-group">
+            <button id="btn-world-jump" type="button" class="swatch-btn">Zıpla / Buz Basamak (Space)</button>
+            <button id="btn-world-cast" type="button" class="swatch-btn active">Birleşik Yetenek Kullan (F)</button>
+            <button id="btn-world-purge" type="button" class="swatch-btn">Nötr & Kanatsız Dön (X)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 1: 8TH COUNCIL MEMBER — 3D PROTAGONIST & NECTAR TRANSFORMATION STUDIO -->
+    <section id="view-protagonist" class="studio-view" aria-label="8. Üye 3D Ana Karakter Sahnesi" hidden>
       <div class="controls-panel">
         <div class="sliders-row">
           <div class="btn-group" role="group" aria-label="Cinsiyet ve Kulak Seçimi">
-            <button type="button" data-gender="kadin" class="swatch-btn prot-gender-btn active">Kadın (23)</button>
-            <button type="button" data-gender="erkek" class="swatch-btn prot-gender-btn">Erkek (23)</button>
+            <button type="button" data-gender="kadin" class="swatch-btn prot-gender-btn active">Kadın (8. Üye)</button>
+            <button type="button" data-gender="erkek" class="swatch-btn prot-gender-btn">Erkek (8. Üye)</button>
             <button type="button" data-gender="both" class="swatch-btn prot-gender-btn">İkisi Yan Yana</button>
             <button id="btn-prot-ear" type="button" class="swatch-btn active">Kulak: Sivri Peri</button>
           </div>
@@ -55,6 +124,7 @@
         <div class="char-hud">
           <div class="char-hud-card">
             <div id="prot-hud-title" class="char-hud-title"></div>
+            <div id="prot-hud-skill" class="world-skill-title"></div>
             <div id="prot-hud-summary" class="char-hud-summary"></div>
           </div>
           <div id="prot-poly-badge" class="poly-badge">3D Yükleniyor...</div>
@@ -63,9 +133,30 @@
 
       <div class="controls-panel">
         <div class="sliders-row">
-          <div class="btn-group" role="group" aria-label="Kanat Evrimi Aşamaları">
-            <span>Kanat Evrimi:</span>
+          <div class="btn-group" role="group" aria-label="Nektar Dönüşüm Modu">
+            <span>Nektar Durumu:</span>
+            <button type="button" data-nmode="neutral" class="swatch-btn prot-nmode-btn">Nötr Hal (Kanatsız)</button>
+            <button type="button" data-nmode="single" class="swatch-btn prot-nmode-btn">Tek Küre</button>
+            <button type="button" data-nmode="dual" class="swatch-btn prot-nmode-btn active">İkili Füzyon (21 Yetenek)</button>
+            <button type="button" data-nmode="sovereign7" class="swatch-btn prot-nmode-btn">Hükümdar Sonu (7 Renk!)</button>
+          </div>
+
+          <div class="btn-group" role="group" aria-label="Geçici Küre Kanadı Evrimi">
             <div id="prot-wing-pills" class="btn-group"></div>
+          </div>
+        </div>
+
+        <div class="sliders-row">
+          <div class="btn-group">
+            <label class="slider-control" for="prot-color-a">
+              <span>Sol Yarı:</span>
+              <select id="prot-color-a" class="select-box"></select>
+            </label>
+            <label class="slider-control" id="prot-color-b-wrap" for="prot-color-b">
+              <span>Sağ Yarı:</span>
+              <select id="prot-color-b" class="select-box"></select>
+            </label>
+            <button id="btn-prot-play-combo" type="button" class="swatch-btn active">Bu Nektarla Açık Dünyada Oyna →</button>
           </div>
 
           <div class="btn-group">
@@ -76,34 +167,18 @@
             <button id="btn-prot-reset" type="button" class="swatch-btn">Ön Açıyı Sıfırla</button>
           </div>
         </div>
-
-        <div class="sliders-row">
-          <div class="btn-group">
-            <button id="btn-fusion-toggle" type="button" class="swatch-btn active">Füzyon Küresi: Aktif (İki Yarı Renk)</button>
-            <label class="slider-control" for="prot-color-a">
-              <span>Sol Yarı:</span>
-              <select id="prot-color-a" class="select-box"></select>
-            </label>
-            <label class="slider-control" for="prot-color-b">
-              <span>Sağ Yarı:</span>
-              <select id="prot-color-b" class="select-box"></select>
-            </label>
-          </div>
-
-          <div id="prot-fusion-presets" class="btn-group"></div>
-        </div>
       </div>
     </section>
 
-    <!-- VIEW 1: 3D COUNCIL CHARACTERS STUDIO -->
-    <section id="view-characters" class="studio-view" aria-label="3D Konsey Karakterleri Sahnesi" hidden>
+    <!-- VIEW 2: 7 DARK COUNCIL BOSSES 3D STUDIO -->
+    <section id="view-characters" class="studio-view" aria-label="7 Karanlık Konsey Boss Sahnesi" hidden>
       <div class="controls-panel">
         <div class="sliders-row">
           <div class="btn-group" role="group" aria-label="Kamera Açısı">
             <button id="btn-cam-full" type="button" class="swatch-btn active">Tam Boy 3D</button>
             <button id="btn-cam-bust" type="button" class="swatch-btn">Yüz & Zırh Yakın</button>
             <button id="btn-cam-back" type="button" class="swatch-btn">Arka 3D Açı</button>
-            <button id="btn-cam-council" type="button" class="swatch-btn">7'li Konsey 3D</button>
+            <button id="btn-cam-council" type="button" class="swatch-btn">7'li Karanlık Konsey</button>
             <button id="btn-cam-sheet" type="button" class="swatch-btn">3-Açılı HD Render Kartı</button>
           </div>
 
@@ -121,13 +196,14 @@
         <div id="council-labels" class="overlay-layer"></div>
 
         <div id="sheet-inspector" class="sheet-inspector" hidden>
-          <img id="sheet-inspector-img" alt="3-Açılı 3D Karakter Render Kartı" />
+          <img id="sheet-inspector-img" alt="3-Açılı 3D Boss Render Kartı" />
         </div>
 
         <div class="char-hud">
           <div class="char-hud-card">
             <div id="char-hud-title" class="char-hud-title"></div>
             <div id="char-hud-summary" class="char-hud-summary"></div>
+            <div id="char-hud-memory" class="memory-quote"></div>
           </div>
           <div id="char-poly-badge" class="poly-badge">Yükleniyor...</div>
         </div>
@@ -140,39 +216,44 @@
           <div class="btn-group">
             <label class="slider-control" for="char-anim-toggle">
               <input id="char-anim-toggle" type="checkbox" checked />
-              <span>Canlı Salınım & Kanat</span>
+              <span>Canlı Salınım</span>
             </label>
-            <button id="btn-char-reset" type="button" class="swatch-btn">Ön Açıyı Sıfırla</button>
-            <button id="btn-char-spheres" type="button" class="swatch-btn">Kürelerini Gör (6) →</button>
+            <button id="btn-char-reset" type="button" class="swatch-btn">Ön Açı</button>
+            <button id="btn-char-fight" type="button" class="swatch-btn active">Bölgesine Işınlan & Savaş →</button>
+            <button id="btn-char-spheres" type="button" class="swatch-btn">6 Nektar Birleşimi →</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- VIEW 2: 3D TWO-COLOR ORGANIC SPHERES STUDIO -->
-    <section id="view-spheres" class="studio-view" aria-label="3D İki Renkli Küre Sahnesi" hidden>
+    <!-- VIEW 3: 21 DUAL NECTAR SPHERES 3D STUDIO -->
+    <section id="view-spheres" class="studio-view" aria-label="21 İkili Nektar Küresi Sahnesi" hidden>
       <div class="controls-panel" aria-label="Renk Filtreleri">
         <div class="sliders-row">
           <div id="color-swatches" class="color-swatches"></div>
           <button id="btn-reset-angle" type="button" class="swatch-btn">Ön Açıyı Sıfırla</button>
         </div>
-        <p id="active-sphere-status" class="status-line">21 İki Renkli Küre • Bir küreye tıklayarak yakından inceleyin</p>
+        <p id="active-sphere-status" class="status-line">21 İkili Nektar Kombinasyonu • Bir küreye tıklayarak birleşik yeteneğini inceleyin</p>
       </div>
 
       <div class="viewport-stage">
         <canvas id="sphere-canvas"></canvas>
         <div id="sphere-labels" class="overlay-layer"></div>
         <div id="hover-tooltip" class="sphere-tooltip" hidden></div>
-        <button id="btn-back-gallery" type="button" class="back-btn" hidden>← Galeriye Dön</button>
+        <button id="btn-back-gallery" type="button" class="back-btn" hidden>← 21 Küre Galerisine Dön</button>
       </div>
 
-      <div class="controls-panel" aria-label="Doku ve Renk Ayarları">
+      <div class="controls-panel" aria-label="Nektar Yeteneği ve Doku Ayarları">
         <div id="single-picker-row" class="sliders-row" hidden>
           <div class="slider-control">
-            <span>Sol Yarı + Sağ Yarı:</span>
+            <span>Birleşen Küreler:</span>
             <select id="select-color-a" class="select-box"></select>
             <span>+</span>
             <select id="select-color-b" class="select-box"></select>
+          </div>
+          <div class="btn-group">
+            <button id="btn-sphere-to-prot" type="button" class="swatch-btn active">8. Üyeye İçir (3D Dönüşüm) →</button>
+            <button id="btn-sphere-to-world" type="button" class="swatch-btn">Açık Dünyada Dene →</button>
           </div>
         </div>
 
@@ -184,14 +265,14 @@
           </label>
 
           <label class="slider-control" for="input-freq">
-            <span>Bakteri Dokusu Yoğunluğu</span>
+            <span>Canlı Küre Dokusu</span>
             <input id="input-freq" type="range" min="18" max="50" value="32" />
             <span id="readout-freq" class="readout">3.2x</span>
           </label>
 
           <label class="slider-control" for="input-pulse">
             <input id="input-pulse" type="checkbox" checked />
-            <span>Canlı Salınım</span>
+            <span>Canlı Nabız</span>
           </label>
         </div>
       </div>

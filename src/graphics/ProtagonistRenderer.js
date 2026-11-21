@@ -66,7 +66,8 @@ const PROT_FS = `
 
   uniform sampler2D uTex;
   uniform float uRenderMode;   // 0: Shaded PBR, 1: ZBrush Clay, 2: Wireframe
-  uniform float uFusionActive; // 0: Natural Uninfused, 1: Two-Hemisphere Active Fusion
+  uniform float uFusionActive; // 0: Neutral Uninfused, 1: Active Nectar (Single or Dual), 2: Sovereign 7-Color Ending
+  uniform float uTimeFrag;
   uniform vec3 uColorA;        // Left Hemisphere Core RGB (x < 0)
   uniform vec3 uTipA;          // Left Hemisphere Bright/Glow RGB
   uniform vec3 uCreviceA;      // Left Hemisphere Deep Shadow RGB
@@ -85,6 +86,25 @@ const PROT_FS = `
 
   float luma(vec3 c) {
     return dot(c, vec3(0.299, 0.587, 0.114));
+  }
+
+  // 7-Color Nova Spectrum for Hükümdar Sonu (Kırmızı -> Turuncu -> Sarı -> Yeşil -> Mavi -> Mor -> Pembe)
+  vec3 novaSpectrum(float t) {
+    float p = fract(t) * 7.0;
+    vec3 c0 = vec3(0.94, 0.08, 0.14); // Kırmızı
+    vec3 c1 = vec3(1.00, 0.44, 0.02); // Turuncu
+    vec3 c2 = vec3(1.00, 0.85, 0.04); // Sarı
+    vec3 c3 = vec3(0.08, 0.78, 0.26); // Yeşil
+    vec3 c4 = vec3(0.06, 0.54, 0.98); // Mavi
+    vec3 c5 = vec3(0.52, 0.12, 0.98); // Mor
+    vec3 c6 = vec3(1.00, 0.30, 0.68); // Pembe
+    if (p < 1.0) return mix(c0, c1, p);
+    if (p < 2.0) return mix(c1, c2, p - 1.0);
+    if (p < 3.0) return mix(c2, c3, p - 2.0);
+    if (p < 4.0) return mix(c3, c4, p - 3.0);
+    if (p < 5.0) return mix(c4, c5, p - 4.0);
+    if (p < 6.0) return mix(c5, c6, p - 5.0);
+    return mix(c6, c0, p - 6.0);
   }
 
   void main() {
@@ -126,7 +146,7 @@ const PROT_FS = `
       return;
     }
 
-    // Crisp organic centerline split between Left Hemisphere (Color A, x < 0) and Right Hemisphere (Color B, x > 0)
+    bool isSov7 = uFusionActive > 1.5;
     float seamWave = sin(vModelPos.y * 14.0 + vModelPos.z * 9.0) * 0.006;
     float sideBlend = smoothstep(-0.014, 0.014, vModelPos.x + seamWave);
     float seamGlowLine = exp(-pow((vModelPos.x + seamWave) / 0.012, 2.0));
@@ -135,28 +155,35 @@ const PROT_FS = `
     vec3 cTip  = mix(uTipA, uTipB, sideBlend);
     vec3 cDark = mix(uCreviceA, uCreviceB, sideBlend);
 
+    if (isSov7) {
+      float band = vModelPos.x * 0.55 + vModelPos.y * 0.42 - uTimeFrag * 0.14;
+      cCore = novaSpectrum(band);
+      cTip  = mix(cCore, vec3(1.0), 0.45);
+      cDark = cCore * 0.28;
+    }
+
     // 1. Evolving 3D Crystal Wings (aFlags.x == 5.0)
     if (vFlags.x > 4.5) {
-      float veinMask = vColor.r; // pre-baked crystal vein & rim intensity [0..1]
+      float veinMask = vColor.r;
       vec3 wingCore = uFusionActive > 0.5 ? cCore : vec3(0.46, 0.56, 0.72);
       vec3 wingTip  = uFusionActive > 0.5 ? cTip  : vec3(0.82, 0.90, 1.00);
       vec3 wingDark = uFusionActive > 0.5 ? cDark : vec3(0.14, 0.18, 0.26);
 
-      vec3 wBase = mix(mix(wingDark, wingCore, 0.62), wingTip, veinMask * 0.85);
-      float transLight = 0.58 + 0.42 * abs(dot(N, L1));
-      vec3 wFinal = wBase * transLight + wingTip * (fresnel * 0.48 + pow(ndh, 24.0) * 0.30);
-      float alpha = clamp(0.36 + veinMask * 0.58 + fresnel * 0.25, 0.30, 0.96);
+      vec3 wBase = mix(mix(wingDark, wingCore, 0.65), wingTip, veinMask * 0.88);
+      float transLight = 0.60 + 0.40 * abs(dot(N, L1));
+      vec3 wFinal = wBase * transLight + wingTip * (fresnel * 0.50 + pow(ndh, 24.0) * 0.32);
+      float alpha = clamp(0.38 + veinMask * 0.58 + fresnel * 0.25, 0.32, 0.96);
       gl_FragColor = vec4(clamp(wFinal, 0.0, 1.0), alpha);
       return;
     }
 
-    // 2. Floating Two-Color Bumpy 3D Bio-Sphere (aFlags.x == 3.0)
+    // 2. Floating Bumpy 3D Bio-Sphere (aFlags.x == 3.0)
     if (vFlags.x > 2.5 && vFlags.x < 3.5) {
-      float hVal = vColor.r * 2.0 - 1.0; // height [-1..1]
+      float hVal = vColor.r * 2.0 - 1.0;
       float orbSide = smoothstep(-0.006, 0.006, vOrbLocalX + sin(vModelPos.y * 28.0) * 0.003);
-      vec3 oCore = uFusionActive > 0.5 ? mix(uColorA, uColorB, orbSide) : vec3(0.30, 0.35, 0.44);
-      vec3 oTip  = uFusionActive > 0.5 ? mix(uTipA, uTipB, orbSide)     : vec3(0.62, 0.70, 0.84);
-      vec3 oDark = uFusionActive > 0.5 ? mix(uCreviceA, uCreviceB, orbSide) : vec3(0.10, 0.12, 0.16);
+      vec3 oCore = isSov7 ? cCore : (uFusionActive > 0.5 ? mix(uColorA, uColorB, orbSide) : vec3(0.30, 0.35, 0.44));
+      vec3 oTip  = isSov7 ? cTip  : (uFusionActive > 0.5 ? mix(uTipA, uTipB, orbSide)     : vec3(0.62, 0.70, 0.84));
+      vec3 oDark = isSov7 ? cDark : (uFusionActive > 0.5 ? mix(uCreviceA, uCreviceB, orbSide) : vec3(0.10, 0.12, 0.16));
 
       vec3 oAlb = hVal < 0.0 ? mix(oDark, oCore, hVal + 1.0) : mix(oCore, oTip, hVal * 0.85);
       float ao = clamp(0.45 + 0.55 * (hVal * 0.5 + 0.5), 0.28, 1.0);
@@ -174,17 +201,16 @@ const PROT_FS = `
 
       if (uFusionActive > 0.5) {
         float lum = luma(baseRGB);
-        // Outfit & Hair Hemisphere Infusion: rich dark-to-vivid elemental dye preserving quilted leather seams & silver specular!
         vec3 clothInfused = mix(cDark * 0.55, cCore * 1.15, clamp(lum * 1.35, 0.0, 1.0));
         clothInfused = mix(clothInfused, cTip, pow(clamp(lum, 0.0, 1.0), 2.4) * 0.58);
 
-        // Skin Hemisphere Infusion: vivid elemental skin transformation while preserving facial shading, lips, brows & pores!
         vec3 skinInfused = mix(cDark * 0.75, mix(cCore, cTip, 0.42), clamp(lum * 1.22, 0.0, 1.0));
         skinInfused = mix(baseRGB, skinInfused, 0.82);
 
         baseRGB = mix(clothInfused, skinInfused, skinMask);
-        // Subtle arcane energy seam down the exact vertical split line
-        baseRGB += mix(uTipA, uTipB, 0.5) * seamGlowLine * 0.16;
+        if (!isSov7) {
+          baseRGB += mix(uTipA, uTipB, 0.5) * seamGlowLine * 0.16;
+        }
       }
 
       float shade = 0.76 + 0.34 * ndl1 + 0.12 * ndl2;
@@ -198,7 +224,6 @@ const PROT_FS = `
     // 4. 360° Stone Turntable Pedestal (aFlags.x == 2.0)
     vec3 pedCol = vColor;
     if (uFusionActive > 0.5 && vFlags.y > 0.5) {
-      // Trim rings on pedestal subtly reflect Left/Right active sphere colors
       pedCol = mix(pedCol, cCore, 0.55);
     }
     vec3 pLit = pedCol * (0.24 + 0.78 * ndl1 + 0.24 * ndl2) + vec3(1.0) * pow(ndh, 22.0) * 0.26 + vec3(0.5, 0.55, 0.65) * fresnel * 0.18;
@@ -685,6 +710,7 @@ export function createProtagonist3DRenderer(canvas, protagonists, sphereColors, 
     uNormalMat: gl.getUniformLocation(prog, 'uNormalMat'),
     uFlapAngle: gl.getUniformLocation(prog, 'uFlapAngle'),
     uTime: gl.getUniformLocation(prog, 'uTime'),
+    uTimeFrag: gl.getUniformLocation(prog, 'uTimeFrag'),
     uOrbCenter: gl.getUniformLocation(prog, 'uOrbCenter'),
     uTex: gl.getUniformLocation(prog, 'uTex'),
     uRenderMode: gl.getUniformLocation(prog, 'uRenderMode'),
@@ -751,10 +777,10 @@ export function createProtagonist3DRenderer(canvas, protagonists, sphereColors, 
     active: true,
     genderMode: 'kadin',   // 'kadin' | 'erkek' | 'both'
     earType: 'pointed',    // 'human' | 'pointed'
-    wingStage: 2,          // 0..4
-    fusionActive: true,    // true = Two-Hemisphere Active Fusion, false = Natural Base
-    colorA: 0,             // Default: Kırmızı (Left Half)
-    colorB: 5,             // Default: Mavi (Right Half)
+    nectarMode: 'dual',    // 'neutral' (Kanatsız) | 'single' (Tek Küre) | 'dual' (İkili Füzyon) | 'sovereign7' (Hükümdar Sonu)
+    wingStage: 2,          // 1..4 when nectar is active
+    colorA: 6,             // Default: Sarı (Left Half — Uçan Sapan #1)
+    colorB: 4,             // Default: Mor (Right Half — Uçan Sapan #1)
     cameraPreset: 'full',  // 'full' | 'bust' | 'back'
     renderStyle: 'shaded', // 'shaded' | 'clay' | 'wireframe'
     rotX: 0.07,
@@ -769,6 +795,13 @@ export function createProtagonist3DRenderer(canvas, protagonists, sphereColors, 
   let simTime = 0;
   let lastTs = performance.now();
 
+  // Canon rule: Wings ONLY appear while a sphere nectar is active! Neutral state is strictly wingless.
+  function getEffectiveWingStage() {
+    if (state.nectarMode === 'neutral') return 0;
+    if (state.nectarMode === 'sovereign7') return 4;
+    return clamp(state.wingStage, 1, 4);
+  }
+
   function bindPart(part) {
     const at = (b, l, sz) => { gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, sz, gl.FLOAT, false, 0, 0); };
     at(part.posB, loc.aPosition, 3);
@@ -782,7 +815,8 @@ export function createProtagonist3DRenderer(canvas, protagonists, sphereColors, 
     const pm = protGpu[pIdx];
     if (!pm) return;
     const prot = protagonists[pIdx];
-    const wingPart = wingGpuStages[state.wingStage];
+    const effStage = getEffectiveWingStage();
+    const wingPart = wingGpuStages[effStage];
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, pm.tex);
@@ -791,6 +825,7 @@ export function createProtagonist3DRenderer(canvas, protagonists, sphereColors, 
     gl.uniformMatrix3fv(loc.uNormalMat, false, nm);
     gl.uniform1f(loc.uFlapAngle, flap);
     gl.uniform1f(loc.uTime, simTime + pIdx * 1.1);
+    gl.uniform1f(loc.uTimeFrag, simTime);
     gl.uniform3fv(loc.uOrbCenter, prot.orbAnchor);
     gl.uniform1f(loc.uRenderMode, state.renderStyle === 'clay' ? 1.0 : 0.0);
 
@@ -813,7 +848,7 @@ export function createProtagonist3DRenderer(canvas, protagonists, sphereColors, 
       gl.drawElements(gl.TRIANGLES, pm.ears.triLen, gl.UNSIGNED_SHORT, 0);
     }
 
-    // 3. Optional Evolving 3D Translucent Crystal Wings (Stages 1..4)
+    // 3. Temporary Active Nectar 3D Crystal Wings (hidden in Neutral state!)
     if (wingPart) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -903,8 +938,10 @@ export function createProtagonist3DRenderer(canvas, protagonists, sphereColors, 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     const cA = sphereColors[state.colorA] || sphereColors[0];
-    const cB = sphereColors[state.colorB] || sphereColors[5];
-    gl.uniform1f(loc.uFusionActive, state.fusionActive ? 1.0 : 0.0);
+    const cB = state.nectarMode === 'single' ? cA : (sphereColors[state.colorB] || sphereColors[4]);
+    const fusionVal = state.nectarMode === 'neutral' ? 0.0 : (state.nectarMode === 'sovereign7' ? 2.0 : 1.0);
+
+    gl.uniform1f(loc.uFusionActive, fusionVal);
     gl.uniform3fv(loc.uColorA, cA.core);
     gl.uniform3fv(loc.uTipA, cA.tip);
     gl.uniform3fv(loc.uCreviceA, cA.crevice);
@@ -942,8 +979,10 @@ export function createProtagonist3DRenderer(canvas, protagonists, sphereColors, 
 
   return {
     state,
+    getEffectiveWingStage,
     getTriangleStats() {
       const indices = state.genderMode === 'both' ? [0, 1] : [state.genderMode === 'erkek' ? 1 : 0];
+      const effStage = getEffectiveWingStage();
       let verts = 0, tris = 0;
       for (const idx of indices) {
         const pm = protGpu[idx];
@@ -954,7 +993,7 @@ export function createProtagonist3DRenderer(canvas, protagonists, sphereColors, 
           verts += pm.ears.vertCount;
           tris += pm.ears.triCount;
         }
-        const wp = wingGpuStages[state.wingStage];
+        const wp = wingGpuStages[effStage];
         if (wp) {
           verts += wp.vertCount;
           tris += wp.triCount;
@@ -967,12 +1006,13 @@ export function createProtagonist3DRenderer(canvas, protagonists, sphereColors, 
       const pm = protGpu[pIdx];
       if (!pm) return '';
       const prot = protagonists[pIdx];
+      const effStage = getEffectiveWingStage();
       const parts = [['BodyAndOrb', pm.body.raw]];
       if (state.earType === 'pointed' && pm.ears) parts.push(['PointedFaeEars', pm.ears.raw]);
-      const wp = wingGpuStages[state.wingStage];
-      if (wp) parts.push([`Wings_Stage_${state.wingStage}`, wp.raw]);
+      const wp = wingGpuStages[effStage];
+      if (wp) parts.push([`Wings_Stage_${effStage}`, wp.raw]);
 
-      const lines = [`# Nova 3D Protagonist: ${prot.label} (Wing Stage ${state.wingStage}, Ears: ${state.earType})`];
+      const lines = [`# Nova 3D Protagonist: ${prot.label} (Mode: ${state.nectarMode}, Wing Stage ${effStage}, Ears: ${state.earType})`];
       let vOff = 1;
       for (const [name, raw] of parts) {
         lines.push(`o ${name}`);
