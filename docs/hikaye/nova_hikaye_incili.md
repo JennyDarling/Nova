@@ -14,8 +14,8 @@ Konsey üyeleri dünyanın 7 ayrı bölgesini ele geçirdi. Küre özü taşıma
 
 Oyunun başında kim olduğumuzu bilmeden uyanırız; ancak Boss'ları yendikçe açılan anılarla gerçek ortaya çıkar:
 
-- Eskiden Konsey 7 değil **8 kişiydi** ve **8. üye bizdik**.
-- Kanatsız halka zulmedilmesine karşı çıktığımız için diğer **7 Boss** birleşip bize ihanet etti. Sırtımızdan kanatlarımızı ve mührümüzü söktüler, hafızamızı sildiler ve bizi yüksek kayalıklardan denize attılar.
+- Eskiden Konsey 7 değil **8 kişiydi** ve **8. üye bizdik**. Diğer 7 küreyi dengede tutan **Gümüş (Denge) Küresi** ve **Gümüş Kanatlar** bize aitti.
+- Kanatsız halka zulmedilmesine karşı çıktığımız için diğer **7 Boss**, o dengeyi yıkmak adına birleşip bize ihanet etti. Gümüş küremizi parçaladılar, sırtımızdan Gümüş kanatlarımızı söktüler, hafızamızı sildiler ve bizi yüksek kayalıklardan denize attılar.
 - **Neden İki Rengi Sadece Biz İçebiliyoruz?** Sıradan bir insan ikinci bir rengin nektarını içerse vücudu dayanamaz ve ölür. Bizim ise mührümüz söküldüğü için artık tek bir renge bağlı değiliz (**Nötr ve Kanatsız** kaldık), fakat eski bir Konsey üyesi bedenine sahip olduğumuz için **iki farklı küre nektarını aynı anda içip birleştirebilen tek kişiyiz!**
 
 ---
